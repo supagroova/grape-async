@@ -40,7 +40,7 @@ module Spec
         async
         get :async do
           log_before!
-          sleep(1)
+          sleep(0.5)
           present({ status: 'ok'})
           log_done!
         end
@@ -48,7 +48,7 @@ module Spec
         async :em
         get :async_em do
           log_before!
-          EM.add_timer(1) do
+          EM.add_timer(0.5) do
             present({ status: 'ok'})
             done
             log_done!

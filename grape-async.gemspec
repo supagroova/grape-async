@@ -4,13 +4,13 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |spec|
   spec.name          = "grape-async"
-  spec.version       = '0.1.1'
+  spec.version       = '0.1.2'
   spec.platform      = Gem::Platform::RUBY
   spec.authors       = ["Lachlan Laycock"]
   spec.email         = ["l.laycock@stuart.com"]
   spec.description   = %q{Async endpoints for Grape APIs}
   spec.summary       = %q{Enable asyncronous endpoints to avoid blocking slow requests within EventMachine or Threads}
-  spec.homepage      = "https://github.com/stuart/grape-async"
+  spec.homepage      = "https://github.com/stuartapp/grape-async"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)
@@ -22,7 +22,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "eventmachine", '~> 1.0'
   spec.add_dependency "activesupport", '~> 4.2'
 
-  spec.add_development_dependency 'bundler', '~> 3.0'
+  spec.add_development_dependency 'bundler', '~> 1.0'
   spec.add_development_dependency 'rake', '~> 10.0'
   spec.add_development_dependency 'rack-test', '~> 0.5'
   spec.add_development_dependency 'rspec', '~> 3.0'
