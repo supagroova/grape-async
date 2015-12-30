@@ -1,3 +1,5 @@
+![Codeship Build Status](https://codeship.com/projects/db2a23e0-911c-0133-7e94-02f6f3a4e3c7/status?branch=master)
+
 # Async endpoints for Grape APIs
 
 Enable asyncronous endpoints to avoid blocking slow requests within EventMachine or Threads. 
