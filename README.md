@@ -1,7 +1,8 @@
 # Async endpoints for Grape APIs
 
 Enable asyncronous endpoints to avoid blocking slow requests within EventMachine or Threads. 
-This can be used with any Ruby server supporting env['async.callback'] or env['rack.hijack'] (the Rack Hijack API).
+This can be used with any Ruby server supporting `env['async.callback']` or
+`env['rack.hijack']` (the Rack Hijack API).
 
 ## Installation
 
