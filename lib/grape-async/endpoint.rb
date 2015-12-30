@@ -1,14 +1,16 @@
+require 'eventmachine'
+
 module Grape
   class Endpoint
 
-    if defined?(EventMachine)
-      class DeferrableResp
-        include EventMachine::Deferrable
-      end
+    class DeferrableResp
+      include EventMachine::Deferrable
     end
 
     def deferred_resp
-      @deferred_resp ||= DeferrableResp.new if async_route?(:em)
+      if async_route?(:em)
+        @deferred_resp ||= DeferrableResp.new
+      end
     end
     
     def async_route?(method = nil)
