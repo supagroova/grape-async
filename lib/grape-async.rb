@@ -1,5 +1,4 @@
 require "grape"
 require "grape-async/api"
-require "grape-async/env"
 require "grape-async/endpoint"
 require "grape-async/middleware/async"
