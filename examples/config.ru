@@ -1,7 +1,7 @@
 require '../lib/grape-async'
 
 class API < Grape::API
-  use Grape::Middleware::Async
+  use Grape::Async
   
   async :em
   desc "Get status using EM async timer"

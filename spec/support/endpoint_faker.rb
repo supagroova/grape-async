@@ -20,7 +20,7 @@ module Spec
         end
         
         logger = Logger.new('log/app.log')
-        use Grape::Middleware::Async
+        use Grape::Async
         use Rack::CommonLogger
         
         helpers do

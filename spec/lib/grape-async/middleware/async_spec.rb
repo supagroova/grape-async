@@ -3,12 +3,12 @@ require 'eventmachine'
 require 'thin'
 require 'puma'
 
-describe Grape::Middleware::Async do
+describe Grape::Async do
 
   def setup_async_obj!
     async_obj = double(:async_obj)
     allow(async_obj).to receive(:call)
-    allow_any_instance_of(Grape::Middleware::Async).to receive(:async_io) {
+    allow_any_instance_of(Grape::Async).to receive(:async_io) {
       async_obj
     }
   end
@@ -163,7 +163,7 @@ describe Grape::Middleware::Async do
 
     context "async endpoints" do
       it "should pass through the async middleware" do
-        expect_any_instance_of(Grape::Middleware::Async).to receive(:call!).and_return([-1, {}, []])
+        expect_any_instance_of(Grape::Async).to receive(:call!).and_return([-1, {}, []])
         get '/async'
       end
 
@@ -181,7 +181,7 @@ describe Grape::Middleware::Async do
 
     context "sync endpoints" do
       it "should pass through the async middleware" do
-        expect_any_instance_of(Grape::Middleware::Async).to receive(:call!).and_return([200, {}, ['ok']])
+        expect_any_instance_of(Grape::Async).to receive(:call!).and_return([200, {}, ['ok']])
         get '/sync'
       end
 
