@@ -13,8 +13,16 @@ describe Grape::Async do
     }
   end
   
-  let(:host) { 'localhost' }
-  let(:port) { 3333 }
+  def kill_server
+    @server.kill if @server.is_a?(Thread) and @server.alive?
+  end
+  
+  def port
+    3333
+  end
+  
+  let(:host)  { 'localhost' }
+  let(:delay) { 0.25 }
   
   before(:each) do
     Spec::Support::EndpointFaker::FakerAPI.clear_requests!
@@ -22,20 +30,25 @@ describe Grape::Async do
   
   context "server async requests", type: :feature do
     
-    let(:reqs_tracker) { Spec::Support::EndpointFaker::FakerAPI.requests }
-    let(:async_responses) { %w(start start start done done done) }
-    let(:sync_responses)  { %w(start done start done start done) }
+    let(:reqs_tracker)    { Spec::Support::EndpointFaker::FakerAPI.requests }
+    let(:async_responses) { %w(start:1 start:2 start:3 done:1 done:2 done:3) }
+    let(:sync_responses)  { %w(start:1 done:1 start:2 done:2 start:3 done:3) }
     
     shared_examples "async requests" do
       
       let(:route) { '/async' }
-      
+
       it "should make 3 thread based async requests" do
         threads = []
+        counter = 0
+        expect(@server).to be_alive
         3.times do
           threads << Thread.new {
-            `curl -s http://#{host}:#{port}#{route}`
+            counter += 1
+            uri = URI.parse("http://#{host}:#{port}#{route}?counter=#{counter}&delay=#{delay}")
+            response = Net::HTTP.get_response(uri)
           }
+          sleep(delay / 3.0)
         end
         threads.each(&:join)
         expect(reqs_tracker).to eql(async_responses)
@@ -49,10 +62,14 @@ describe Grape::Async do
       
       it "should make sync 3 requests" do
         threads = []
+        counter = 0
         3.times do
           threads << Thread.new {
-            `curl -s http://#{host}:#{port}#{route}`
+            counter += 1
+            uri = URI.parse("http://#{host}:#{port}#{route}?counter=#{counter}")
+            response = Net::HTTP.get_response(uri)
           }
+          sleep(delay/3.0)
         end
         threads.each(&:join)
         expect(reqs_tracker).to eql(sync_responses)
@@ -64,13 +81,13 @@ describe Grape::Async do
 
       before(:all) do
         @server = Thread.new {
-          Thin::Server.start('localhost', 3333) { run Spec::Support::EndpointFaker::FakerAPI }
+          Thin::Server.start('localhost', port) { run Spec::Support::EndpointFaker::FakerAPI }
         }
         sleep(1)
       end
 
       after(:all) do
-        @server.kill if @server.is_a?(Thread) and @server.alive?
+        kill_server
       end
 
       context "sync endpoints are run as sync" do
@@ -92,16 +109,17 @@ describe Grape::Async do
     context "using the puma server" do
 
       before(:all) do
-        @server = Thread.new {
-          app = Spec::Support::EndpointFaker::FakerAPI.new
-          Puma::Server.new(app).tap do |s|
-            s.add_tcp_listener 'localhost', 3333
-          end.run
-        }
+        app  = Spec::Support::EndpointFaker::FakerAPI.new
+        puma = Puma::Server.new(app).tap do |s|
+          s.add_tcp_listener 'localhost', port
+        end
+        puma.run
+        @server = puma.thread
+        sleep(1)
       end
 
       after(:all) do
-        @server.kill if @server.is_a?(Thread) and @server.alive?
+        kill_server
       end
 
       context "sync endpoints are run as sync" do
@@ -131,13 +149,13 @@ describe Grape::Async do
 
       before(:all) do
         @server = Thread.new {
-          Rack::Handler::WEBrick.run(Spec::Support::EndpointFaker::FakerAPI.new, :Port => 3333)
+          Rack::Handler::WEBrick.run(Spec::Support::EndpointFaker::FakerAPI.new, :Port => port)
         }
         sleep(1)
       end
 
       after(:all) do
-        @server.kill if @server.is_a?(Thread) and @server.alive?
+        kill_server
       end
 
       context "sync endpoints are run as sync" do
@@ -160,6 +178,7 @@ describe Grape::Async do
         run Spec::Support::EndpointFaker::FakerAPI.new
       end
     }
+    let(:counter) { 1 }
 
     context "async endpoints" do
       it "should pass through the async middleware" do
@@ -169,12 +188,12 @@ describe Grape::Async do
 
       it "should receive async response" do
         setup_async_obj!
-        get '/async'
+        get '/async', counter: counter, delay: delay
         expect(last_response.status).to eq(-1)
       end
 
       it "should NOT receive async response without server asysnc support" do
-        get '/async'
+        get '/async', counter: counter, delay: delay
         expect(last_response.status).to eq(200)
       end
     end
@@ -182,16 +201,16 @@ describe Grape::Async do
     context "sync endpoints" do
       it "should pass through the async middleware" do
         expect_any_instance_of(Grape::Async).to receive(:call!).and_return([200, {}, ['ok']])
-        get '/sync'
+        get '/sync', counter: counter
       end
 
       it "should NOT receive async response" do
-        get '/sync'
+        get '/sync', counter: counter
         expect(last_response.status).to eq(200)
       end
 
       it "should NOT receive async response without server asysnc support" do
-        get '/sync'
+        get '/sync', counter: counter
         expect(last_response.status).to eq(200)
       end
 

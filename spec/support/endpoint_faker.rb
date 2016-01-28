@@ -19,46 +19,51 @@ module Spec
           
         end
         
-        logger = Logger.new('log/app.log')
         use Grape::Async
-        use Rack::CommonLogger
-        
+
         helpers do
-          def logger
-            API.logger
-          end
-              
-          def log_before!
-            FakerAPI.requests << "start"
+          def log_start!(i)
+            FakerAPI.requests << "start:#{i}"
           end
         
-          def log_done!
-            FakerAPI.requests << "done"
+          def log_done!(i)
+            FakerAPI.requests << "done:#{i}"
           end
         end
         
         async
+        params do
+          requires :counter, type: Integer
+          requires :delay, type: Float
+        end
         get :async do
-          log_before!
-          sleep(0.5)
+          log_start!(params[:counter])
+          sleep(params[:delay])
           present({ status: 'ok'})
-          log_done!
+          log_done!(params[:counter])
         end
 
         async :em
+        params do
+          requires :counter, type: Integer
+          requires :delay, type: Float
+        end
         get :async_em do
-          log_before!
-          EM.add_timer(0.5) do
+          log_start!(params[:counter])
+          EM.add_timer(params[:delay]) do
             present({ status: 'ok'})
             done
-            log_done!
+            log_done!(params[:counter])
           end
         end
 
+        params do
+          requires :counter, type: Integer
+        end
         get :sync do
-          log_before!
+          log_start!(params[:counter])
           present({ status: 'ok'})
-          log_done!
+          log_done!(params[:counter])
         end
 
       end
