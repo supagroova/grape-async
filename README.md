@@ -1,6 +1,7 @@
 ![Codeship Build Status](https://codeship.com/projects/db2a23e0-911c-0133-7e94-02f6f3a4e3c7/status?branch=master)
 [![Code Climate](https://codeclimate.com/repos/56a9f6a1b12a0c564e00f8df/badges/9d32be50870d6bf6b2dd/gpa.svg)](https://codeclimate.com/repos/56a9f6a1b12a0c564e00f8df/feed)
 [![Test Coverage](https://codeclimate.com/repos/56a9f6a1b12a0c564e00f8df/badges/9d32be50870d6bf6b2dd/coverage.svg)](https://codeclimate.com/repos/56a9f6a1b12a0c564e00f8df/coverage)
+[![Issue Count](https://codeclimate.com/repos/567ac1cbbd3f3b0eb800005f/badges/2348ecbd40fc436cb46b/issue_count.svg)](https://codeclimate.com/repos/567ac1cbbd3f3b0eb800005f/feed)
 
 # Async endpoints for Grape APIs
 
