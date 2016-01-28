@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |spec|
   spec.name          = "grape-async"
-  spec.version       = '0.1.2'
+  spec.version       = '0.1.3'
   spec.platform      = Gem::Platform::RUBY
   spec.authors       = ["Lachlan Laycock"]
   spec.email         = ["l.laycock@stuart.com"]
