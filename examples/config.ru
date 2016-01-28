@@ -1,4 +1,4 @@
-require '../lib/grape-async'
+require './lib/grape-async'
 
 class API < Grape::API
   use Grape::Async
