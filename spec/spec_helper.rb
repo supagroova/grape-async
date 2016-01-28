@@ -8,7 +8,9 @@ require 'pry'
 require 'rack/test'
 require 'grape-async'
 require 'endpoint_faker'
+require "codeclimate-test-reporter"
 
+CodeClimate::TestReporter.start
 Bundler.setup :default, :test
 
 RSpec.configure do |config|
