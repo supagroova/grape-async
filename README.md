@@ -30,6 +30,20 @@ end
 The `async` directive accepts either `:em` for EventMachine based async or `:threaded` for thread based async. 
 The default is `:threaded`.
 
+## Examples
+
+To run the provided example with Thin:
+
+```shell
+bundle exec thin start -R examples/config.ru
+```
+
+or with Puma
+
+```shell
+bundle exec puma examples/config.ru -t 8:32 -w 3 -b tcp://0.0.0.0:3000
+```
+
 ## Contributing
 
 1. Fork it ( https://github.com/stuart/grape-async/fork )
