@@ -21,6 +21,7 @@ module Grape
           else
             proc.call
           end
+        
         else
           Thread.new do
             result = super
@@ -41,22 +42,25 @@ module Grape
       if @env['async.callback']
         async_io.call result
       elsif @env['rack.hijack']
+        status, headers, body = result
         begin
-          if result.last.is_a?(Rack::BodyProxy)
-            async_io << result.last.body.first
-            result.last.close unless result.last.closed?
-          elsif result.last.is_a?(Array)
-            async_io << result.last.first
+          async_io.write("HTTP/1.1 #{status}\r\n")
+          headers.each do |key, value|
+            async_io.write("#{key}: #{value}\r\n")
+          end
+          async_io.write("Connection: close\r\n")
+          async_io.write("\r\n")
+          body.each do |data|
+            async_io.write(data)
           end
         ensure
-          EM.stop if endpoint.async_route?(:em)
-          @env['rack.hijack'].close
+          async_io.close
         end
       end
     end
     
     def async_io
-      @env['async.callback'] || begin
+      @async_io ||= @env['async.callback'] || begin
         @env.key?('rack.hijack') ? @env['rack.hijack'].call : nil
       end
     end
