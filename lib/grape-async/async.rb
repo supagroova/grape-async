@@ -3,17 +3,37 @@ module Grape
     
     def call!(env)
       @env = env
+      call_with_async do
+        begin
+          super
+        rescue Grape::Exceptions::ValidationErrors => err
+          endpoint.status err.status
+          endpoint.headers.merge! err.headers
+          endpoint.body err.to_json
+          endpoint.done
+          [ endpoint.status, endpoint.headers, [endpoint.body] ]
+        rescue Exception
+          error($!)
+        end
+      end
+    end
+    
+    def call_with_async(&block)
       if endpoint.async_route? && !async_io.nil?
         if endpoint.async_route?(:em)
           proc = lambda {
+            EM.error_handler do |err|
+              error(err)
+            end
             EM.next_tick do
-              super
               endpoint.deferred_resp.callback do
                 resp = endpoint.file || [endpoint.body]
                 async_call [endpoint.status, endpoint.header, resp]
               end
+              block.call
             end
           }
+          
           if !EM.reactor_running?
             EM.run do
               proc.call
@@ -24,19 +44,20 @@ module Grape
         
         else
           Thread.new do
-            result = super
+            result = block.call
             async_call result
-            yield
           end
         end
         
         [-1, {}, []] # Return async response
         
       else
-        super
+        block.call
 
       end
+      
     end
+
     
     def async_call(result)
       if @env['async.callback']
@@ -68,6 +89,17 @@ module Grape
     def endpoint
       @env[Grape::Env::API_ENDPOINT]
     end
+    
+    private
+    
+    def error(msg)
+      body = { error: msg }.to_json
+      endpoint.status 500
+      endpoint.body body
+      endpoint.done
+      [ endpoint.status, endpoint.headers, [endpoint.body] ]
+    end
+
     
   end
 end

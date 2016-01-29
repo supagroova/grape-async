@@ -29,41 +29,75 @@ module Spec
           def log_done!(i)
             FakerAPI.requests << "done:#{i}"
           end
+          
+          def delay
+            (params[:delay] || 0.5).to_f
+          end
+
+          def counter
+            (params[:counter] || 1).to_i
+          end
+
         end
         
         async
         params do
-          requires :counter, type: Integer
-          requires :delay, type: Float
+          optional :counter, type: Integer
+          optional :delay, type: Float
         end
         get :async do
-          log_start!(params[:counter])
-          sleep(params[:delay])
+          log_start!(counter)
+          sleep(delay)
           present({ status: 'ok'})
-          log_done!(params[:counter])
+          log_done!(counter)
+        end
+
+        async :em
+        params do
+          optional :counter, type: Integer
+          optional :delay, type: Float
+        end
+        get :async_em do
+          log_start!(counter)
+          EM.add_timer(delay) do
+            present({ status: 'ok'})
+            done
+            log_done!(counter)
+          end
+        end
+
+        params do
+          optional :counter, type: Integer
+        end
+        get :sync do
+          log_start!(counter)
+          present({ status: 'ok'})
+          log_done!(counter)
+        end
+
+        params do
+          requires :counter, type: Integer
+        end
+        get :async_error do
+          sleep(delay)
+          raise RuntimeError.new "Booom!"
         end
 
         async :em
         params do
           requires :counter, type: Integer
-          requires :delay, type: Float
         end
-        get :async_em do
-          log_start!(params[:counter])
-          EM.add_timer(params[:delay]) do
-            present({ status: 'ok'})
-            done
-            log_done!(params[:counter])
+        get :async_em_error do
+          EM.add_timer(delay) do
+            raise RuntimeError.new "Booom!"
           end
         end
 
         params do
           requires :counter, type: Integer
         end
-        get :sync do
-          log_start!(params[:counter])
-          present({ status: 'ok'})
-          log_done!(params[:counter])
+        get :sync_error do
+          raise RuntimeError.new "Booom!"
         end
 
       end

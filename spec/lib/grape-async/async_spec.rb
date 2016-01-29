@@ -35,23 +35,46 @@ describe Grape::Async do
     let(:sync_responses)  { %w(start:1 done:1 start:2 done:2 start:3 done:3) }
     
     shared_examples "async requests" do
-      
+
       let(:route) { '/async' }
 
       it "should make 3 thread based async requests" do
         threads = []
         counter = 0
         expect(@server).to be_alive
-        3.times do
-          threads << Thread.new {
-            counter += 1
-            uri = URI.parse("http://#{host}:#{port}#{route}?counter=#{counter}&delay=#{delay}")
-            response = Net::HTTP.get_response(uri)
-          }
-          sleep(delay / 3.0)
+        Timeout::timeout(delay * 5) do
+          3.times do
+            threads << Thread.new {
+              counter += 1
+              uri = URI.parse("http://#{host}:#{port}#{route}?counter=#{counter}&delay=#{delay}")
+              Net::HTTP.get_response(uri)
+            }
+            sleep(delay / 3.0)
+          end
         end
         threads.each(&:join)
         expect(reqs_tracker).to eql(async_responses)
+      end
+
+    end
+
+    shared_examples "error requests" do
+
+      let(:route) { '/async_error' }
+      it "should return a 400 missing parameter response" do
+        Timeout::timeout(delay * 4) {
+          uri = URI.parse("http://#{host}:#{port}#{route}")
+          response = Net::HTTP.get_response(uri)
+          expect(response.code).to eq('400')
+        }
+      end
+
+      it "should return a 500 missing parameter response" do
+        Timeout::timeout(delay * 4) {
+          uri = URI.parse("http://#{host}:#{port}#{route}?counter=1")
+          response = Net::HTTP.get_response(uri)
+          expect(response.code).to eq('500')
+        }
       end
 
     end
@@ -67,7 +90,7 @@ describe Grape::Async do
           threads << Thread.new {
             counter += 1
             uri = URI.parse("http://#{host}:#{port}#{route}?counter=#{counter}")
-            response = Net::HTTP.get_response(uri)
+            Net::HTTP.get_response(uri)
           }
           sleep(delay/3.0)
         end
@@ -92,15 +115,22 @@ describe Grape::Async do
 
       context "sync endpoints are run as sync" do
         it_behaves_like "sync requests"
+        it_behaves_like "error requests" do
+          let(:route) { '/sync_error' }
+        end
       end
 
       context "threaded async endpoints are run as async" do
         it_behaves_like "async requests"
+        it_behaves_like "error requests"
       end
 
       context "EM async endpoints are run as async" do
         it_behaves_like "async requests" do
           let(:route) { '/async_em' }
+        end
+        it_behaves_like "error requests" do
+          let(:route) { '/async_em_error' }
         end
       end
 
@@ -124,15 +154,22 @@ describe Grape::Async do
 
       context "sync endpoints are run as sync" do
         it_behaves_like "sync requests"
+        it_behaves_like "error requests" do
+          let(:route) { '/sync_error' }
+        end
       end
 
       context "threaded async endpoints are run as async" do
         it_behaves_like "async requests"
+        it_behaves_like "error requests"
       end
 
       context "EM async endpoints are run as async" do
         it_behaves_like "async requests" do
           let(:route) { '/async_em' }
+        end
+        it_behaves_like "error requests" do
+          let(:route) { '/async_em_error' }
         end
       end
 
@@ -160,6 +197,9 @@ describe Grape::Async do
 
       context "sync endpoints are run as sync" do
         it_behaves_like "sync requests"
+        it_behaves_like "error requests" do
+          let(:route) { '/sync_error' }
+        end
       end
 
       context "async endpoints are run as sync" do
